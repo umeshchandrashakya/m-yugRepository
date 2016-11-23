@@ -1,0 +1,70 @@
+public class VideoAdapter extends BaseAdapter {
+    private Context context;
+    private List<Videos> rowItem;
+    public ShowOfferAdapter(Context context, List<Videos> item) {
+        this.context = context;
+        this.rowItem = item;
+    }
+    @Override
+    public int getCount() {
+        return rowItem.size();
+    }
+
+    @Override
+    public Object getItem(int position) {
+       return rowItem.get(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return rowItem.indexOf(getItem(position));
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        View item = convertView;
+        ViewHolder holder = null;
+        if(convertView==null){
+            LayoutInflater infalter= (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
+            item=infalter.inflate(R.layout.show_offer_row, parent, false);
+            holder = new ViewHolder();
+            holder.merchantName = (TextView) item.findViewById(R.id.tv_merchant_name);
+            holder.offers = (TextView) item.findViewById(R.id.tv_offer);
+            holder.knowMore = (Button) item.findViewById(R.id.btn_know_more);
+            item.setTag(holder);
+        }else {
+            holder = (ViewHolder) item.getTag();
+        }
+        final Videos rowPostion = rowItem.get(position);
+        holder.merchantName.setText(rowPostion.getVideo_title());
+        holder.offers.setText(rowPostion.getVideo_url());
+
+        item.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(context, YoutubeActivity.class);
+                intent.putExtra("url",rowPostion.getVideo_url());
+                context.startActivity(intent);
+            }
+        });
+        holder.knowMore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(context, YoutubeActivity.class);
+                intent.putExtra("url",rowPostion.getVideo_url());
+                context.startActivity(intent);
+            }
+        });
+
+        return item;
+    }
+    static class ViewHolder {
+        TextView merchantName;
+        TextView offers;
+        ImageView merchantlogo;
+        Button knowMore;
+    }
+
+
+
+}
