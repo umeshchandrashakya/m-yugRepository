@@ -1,0 +1,47 @@
+public class MainActivity extends Activity{
+
+    private String url="http://tfhapp.fathershouse.in/api/video.php";
+    private ListView listView;
+    private Videos items;
+    private List<Videos>arraylist=new ArrayList<Videos>();
+    private ShowOfferAdapter adapter;
+    private AsyncTaskCompleteListener<String>callback=new AsyncTaskCompleteListener<String>() {
+        @Override
+        public void onSuccess(String result) {
+            try {
+                JSONObject object=new JSONObject(result);
+                String statusCode = object.getString("statusCode");
+                if(statusCode.equals("200")){
+                    String videos = object.getString("videos");
+                    JSONArray jsonArray = new JSONArray(videos);
+                    for (int i=0;i<jsonArray.length();i++) {
+                     JSONObject explrObject = jsonArray.getJSONObject(i);
+                     items = new Videos();
+                     items.setVideoid(explrObject.getString("videoid"));
+                     items.setVideo_title(explrObject.getString("video_title"));
+                     items.setVideo_url(explrObject.getString("video_url"));
+                     arraylist.add(items) ;
+                 }
+                }
+                adapter = new ShowOfferAdapter(MainActivity.this, arraylist);
+                listView.setAdapter(adapter);
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+    };
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        listView= (ListView) findViewById(R.id.listview);
+         getDataFromUrl();
+    }
+
+    public void getDataFromUrl() {
+       new RestAsyncTask1(MainActivity.this,callback,"POST").execute(url,"gg","hfjasdh","afoiaf");
+    }
