@@ -1,0 +1,112 @@
+public class RestAsyncTask1 extends AsyncTask<String, Void, String> {
+
+    private AsyncTaskCompleteListener callback;
+    private Context context;
+    private String method;
+    private ProgressDialog pdia;
+    public RestAsyncTask1(Context context, AsyncTaskCompleteListener callback, String method) {
+        this.callback = callback;
+        this.context = context;
+        this.method = method;
+    }
+    public static String format(String url, String... params) {
+        String[] encoded = new String[params.length];
+        for (int i = 0; i < params.length; i++) {
+            encoded[i] = Uri.encode(params[i]);
+        }
+        return String.format(url, (String[]) encoded);
+    }
+
+
+    @Override
+    protected void onPreExecute() {
+        pdia = new ProgressDialog(context);
+        pdia.setMessage("Loading...");
+        pdia.show();
+    }
+
+    @Override
+    protected String doInBackground(String... params) {
+        String url = params[0];
+        String response = null;
+        HttpURLConnection connection = null;
+        if (params.length > 1) {
+            if (method.equals(Method.GET)) {
+                url = format(url, (String[]) Arrays.copyOfRange(params, 1, params.length));
+            } else if (params.length > 2) {
+                url = format(url, (String[]) Arrays.copyOfRange(params, 1, params.length - 1));
+            }
+        }
+            try {
+                URL call = new URL(url);
+                connection = (HttpURLConnection) call.openConnection();
+                connection.setRequestProperty("Content-Type", "application/json");
+                //connection.setRequestProperty("M-Yug", Utilities.VERSION);
+                connection.setRequestMethod(method);
+                connection.setDoOutput(true);
+                if (method.equals("POST")) {
+                    BufferedOutputStream outputStream = new BufferedOutputStream(connection.getOutputStream());
+                    outputStream.write(params[params.length - 1].getBytes());
+                    outputStream.flush();
+                }
+                int status = connection.getResponseCode();
+                if (status == HttpURLConnection.HTTP_OK) {
+                    InputStream is = connection.getInputStream();
+                    response = readValue(is);
+                } else if (status == 400) {
+                    InputStream is = connection.getErrorStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder builder = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        builder.append(line);
+                    }
+                    reader.close();
+                    Toast.makeText(context, "" + builder.toString(), Toast.LENGTH_SHORT).show();
+                }
+                connection.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+
+        return response;
+    }
+
+    @Override
+    protected void onPostExecute(String s) {
+        if (pdia.isShowing()&&pdia != null )
+        {
+            pdia.dismiss();
+        }
+        if(s!=null){
+            String resopnse=s.toString();
+            callback.onSuccess(resopnse);
+        }else {
+           Toast.makeText(context,"Server Not Responding",Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    private String readValue(InputStream is) {
+        BufferedReader br = null;
+        StringBuilder sb = new StringBuilder();
+        String line;
+        try {
+            br = new BufferedReader(new InputStreamReader(is));
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        return sb.toString();
+    }
+
+    enum Method {
+        GET, POST
+    }
+}
